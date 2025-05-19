@@ -1,6 +1,3 @@
-script.js
-
-// DOM Elements
 document.addEventListener('DOMContentLoaded', function() {
   // Navigation and UI elements
   const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
