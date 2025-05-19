@@ -1,0 +1,195 @@
+script.js
+
+// DOM Elements
+document.addEventListener('DOMContentLoaded', function() {
+  // Navigation and UI elements
+  const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+  const closeNotificationBtn = document.getElementById('closeNotification');
+  const cartNotification = document.getElementById('cartNotification');
+  const loginAnimation = document.getElementById('loginAnimation');
+  const welcomeUsername = document.getElementById('welcomeUsername');
+  const cartBadge = document.getElementById('cart-count');
+  
+  // Product interaction elements
+  const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
+  const quickViewButtons = document.querySelectorAll('.quick-view-btn');
+  
+  // Product data
+  const products = [
+    {
+      id: 1,
+      name: 'RGB Gaming Keyboard',
+      price: 129.99,
+      description: 'Mechanical RGB gaming keyboard with customizable lighting',
+      category: 'Keyboards',
+      image: 'assets/rgb-keyboard.jpg',
+      rating: 4.5,
+      ratingCount: 128
+    },
+    {
+      id: 2,
+      name: 'Pro Gaming Mouse',
+      price: 79.99,
+      description: 'High-precision gaming mouse with adjustable DPI',
+      category: 'Mice',
+      image: 'assets/gaming-mouse.jpg',
+      rating: 4.0,
+      ratingCount: 94
+    },
+    {
+      id: 3,
+      name: 'Gaming Headset',
+      price: 89.99,
+      description: 'Premium surround sound gaming headset with noise-cancellation',
+      category: 'Headsets',
+      image: 'assets/gaming-headset.jpg',
+      rating: 4.5,
+      ratingCount: 156
+    },
+    {
+      id: 4,
+      name: 'Gaming Chair',
+      price: 249.99,
+      originalPrice: 299.99,
+      description: 'Ergonomic gaming chair with lumbar support and adjustable armrests',
+      category: 'Accessories',
+      image: 'assets/gaming-chair.jpg',
+      rating: 4.0,
+      ratingCount: 72
+    }
+  ];
+  
+  // Cart functionality
+  let cart = JSON.parse(localStorage.getItem('cart')) || [];
+  
+  // Update cart count display
+  function updateCartCount() {
+    const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
+    cartBadge.textContent = totalItems;
+    cartBadge.style.display = totalItems > 0 ? 'flex' : 'none';
+  }
+  
+  // Add item to cart
+  function addToCart(productId, quantity = 1) {
+    // Find the product
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+    
+    // Check if product already exists in cart
+    const existingItemIndex = cart.findIndex(item => item.productId === productId);
+    
+    if (existingItemIndex >= 0) {
+      // Update quantity if item exists
+      cart[existingItemIndex].quantity += quantity;
+    } else {
+      // Add new item if it doesn't exist
+      cart.push({
+        id: Date.now(), // Unique ID for cart item
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        quantity
+      });
+    }
+    
+    // Save cart to localStorage
+    localStorage.setItem('cart', JSON.stringify(cart));
+    
+    // Update UI
+    updateCartCount();
+    showNotification('Item Added', `${product.name} has been added to your cart`);
+  }
+  
+  // Display notification
+  function showNotification(title, message, type = 'success') {
+    const notificationTitle = document.getElementById('notificationTitle');
+    const notificationMessage = document.getElementById('notificationMessage');
+    const notificationIcon = document.querySelector('.cart-notification-icon');
+    
+    notificationTitle.textContent = title;
+    notificationMessage.textContent = message;
+    
+    // Set notification type
+    notificationIcon.className = `cart-notification-icon ${type}`;
+    
+    // Show notification
+    cartNotification.classList.add('show');
+    
+    // Auto hide after 3 seconds
+    setTimeout(() => {
+      cartNotification.classList.remove('show');
+    }, 3000);
+  }
+  
+  // Cart notification close button
+  if (closeNotificationBtn) {
+    closeNotificationBtn.addEventListener('click', () => {
+      cartNotification.classList.remove('show');
+    });
+  }
+  
+  // Add to cart buttons on product cards
+  if (addToCartButtons) {
+    addToCartButtons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        const productId = parseInt(e.currentTarget.getAttribute('data-product-id'));
+        addToCart(productId, 1);
+      });
+    });
+  }
+  
+  // Show welcome animation if user just logged in
+  function showWelcomeAnimation() {
+    const justLoggedIn = sessionStorage.getItem('justLoggedIn');
+    const user = checkAuthStatus();
+    
+    if (justLoggedIn === 'true' && user && loginAnimation) {
+      // Set username
+      if (welcomeUsername) {
+        welcomeUsername.textContent = user.username.toUpperCase();
+      }
+      
+      // Show animation
+      loginAnimation.classList.add('visible');
+      
+      // Hide after animation completes
+      setTimeout(() => {
+        loginAnimation.classList.remove('visible');
+        // Clear the flag
+        sessionStorage.removeItem('justLoggedIn');
+      }, 3000);
+    }
+  }
+  
+  // Check for auth status in localStorage
+  function checkAuthStatus() {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user) {
+      // Update UI for logged in user
+      const userBtn = document.querySelector('.user-btn');
+      if (userBtn) {
+        userBtn.innerHTML = `
+          <div class="user-avatar">
+            <span>${user.username.charAt(0)}</span>
+          </div>
+        `;
+        userBtn.setAttribute('href', '/account');
+        userBtn.setAttribute('aria-label', 'Account');
+      }
+      
+      return user;
+    }
+    return null;
+  }
+  
+  // Initialize functions
+  function init() {
+    updateCartCount();
+    checkAuthStatus();
+    showWelcomeAnimation();
+  }
+  
+  // Run initializer
+  init();
+});
